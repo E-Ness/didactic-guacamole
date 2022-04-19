@@ -1,0 +1,76 @@
+clear; clc;
+
+[v,Fs] = audioread('poggers2.wav');
+v = v(:,1);
+y = v;
+
+%2) premphasis
+c = 0.98;
+for n= 2:length(v)
+    y(n) = v(n) - c*v(n-1);
+end
+
+%3) dft of autocorrelation
+y1 = abs(fft(xcorr(y,30)));
+figure()
+ stem(y1);
+ title('auto correlation of y(n)');
+
+%4) magnitude square of dft
+y2 = abs(fft(y)).^2;
+figure()
+stem(y2);
+ title('magnitude squared of y(n)');
+
+%linear model part
+
+%sound(v,Fs);
+[a,g] = lpc(y,30);
+%this is linear prediction filter coefficients
+%a is the coefficients of the filter. g is variance of error.
+
+%the ar model
+ar = filter(1,a,y);
+figure()
+%plot(length(ar),ar);
+stem(ar);
+
+%the emphasised signal
+figure()
+%plot(length(y),y);
+stem(y);
+
+%overlapping ar and y
+%figure()
+%hold on
+%stem(ar)
+%stem(y,'r')
+
+%the original signal
+figure()
+%plot(length(y),y);
+stem(v);
+
+I0 = round(1.05*Fs);
+Iend = round(1.32*Fs);
+ycc = y(I0:Iend);
+
+[cepstrum,recon] = rceps(ycc);
+figure()
+semilogy(abs(cepstrum));
+
+%getting fundemental frequency over time using pitch
+[pipe,loc] = pitch(v,Fs);
+%its about 110 Hz for poggers2
+
+
+
+%V = G - G2; euclidean distance between vectors 
+%D = DNorm2(G - G2);  https://www.mathworks.com/matlabcentral/answers/2849-euclidean-distance-of-two-vectors
+
+%i dunno if this is what we want
+%https://www.semanticscholar.org/paper/Distance-measure-for-speech-recognition-based-on-Itakura-Umezaki/1ac3f25207fd9ceba5efe03683bcf6d5cf369d05
+
+%roots of ar coefficients are the formants
+%we can just use pitch function to get pitch period apparently
+
